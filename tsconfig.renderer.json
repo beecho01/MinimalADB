@@ -1,0 +1,23 @@
+{
+    "compilerOptions": {
+        "allowJs": false,
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": false,
+        "forceConsistentCasingInFileNames": true,
+        "isolatedModules": true,
+        "jsx": "react-jsx",
+        "lib": ["DOM", "DOM.Iterable", "ESNext"],
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "noEmit": true,
+        "paths": {
+            "@common/*": ["./src/common/*"]
+        },
+        "resolveJsonModule": true,
+        "rootDir": "./src",
+        "skipLibCheck": true,
+        "strict": true,
+        "target": "ESNext",
+        "useDefineForClassFields": true
+    }
+}
