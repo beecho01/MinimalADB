@@ -1,46 +1,45 @@
-# Electron + Fluent UI React
+# MinimalADB
 
-This is a repo to quickly start the development of an electron application with [Fluent UI React](https://react.fluentui.dev/).
+MinimalADB is a GUI based ADB interface, dedicated for flashing Android devices over ADB (Android Debug Bridge).
+This is a modernised version of [yadev64/GMADB](https://github.com/yadev64/GMADB) using design principals of Microsoft's [Fluent-UI](https://developer.microsoft.com/en-us/fluentui#/).
 
 ![Windows Light](docs/windows-light.png)
 ![Windows Dark](docs/windows-dark.png)
-![macOS Light](docs/macos-light.png)
-![macOS Dark](docs/macos-dark.png)
 
 ## Development
 
 -   Install dependencies
 
     ```
-    $ npm install
+    $ yarn install
     ```
 
 -   Run app in dev mode
 
     ```
-    $ npm run dev
+    $ yarn run dev
     ```
 
 -   Lint files
 
     ```
-    $ npm run lint
+    $ yarn run lint
     ```
 
 -   Perform typecheck
 
     ```
-    $ npm run typecheck
+    $ yarn run typecheck
     ```
 
 -   Run tests
 
     ```
-    $ npm run test
+    $ yarn run test
     ```
 
 -   Build and package app
 
     ```
-    $ npm run build && npm run package
+    $ yarn run build && yarn run package
     ```

@@ -4,6 +4,7 @@
 
 .xterm-viewport {
 	border-radius: var(--borderRadiusXLarge);
+    background-color: rgba(0, 0, 0, 0.3) !important;
 }
 
 .xterm .xterm-viewport {
@@ -19,7 +20,6 @@
 }
 
 .xterm-viewport::-webkit-scrollbar-thumb {
-    background-color: rgba(255, 255, 255, 0.1);
     border-radius: 16px;
     border: 6px solid #000000;
 	transition: all 1s ease-in-out;

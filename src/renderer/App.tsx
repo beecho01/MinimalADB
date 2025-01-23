@@ -87,7 +87,7 @@ export const App = () => {
                 <Sidebar />
                 <div className={styles.workspace}>
                     <Terminal />
-                    <UpdateMessage />
+
                     <Dialog open={isDialogOpen} modalType="alert">
                         <DialogSurface>
                             <DialogBody>

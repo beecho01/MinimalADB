@@ -36,11 +36,12 @@ export const Terminal = () => {
             cursorBlink: false,
             fontFamily: "Jetbrains Mono",
             theme: {
-                background: "#000000",
-                foreground: "green",
-                cursor: "#000000",
+                foreground: "#EEEEEE",
+                background: "#300a2480",
+                cursor: "#CFF5DB"
             },
-            disableStdin: true, // Disable user input
+            allowTransparency: true,
+            disableStdin: true,
         });
         xtermRef.current = terminal;
     
@@ -67,7 +68,7 @@ export const Terminal = () => {
         if (terminalRef.current) {
             terminal.open(terminalRef.current);
             fitAddon.fit();
-            terminal.write("🎉 Welcome to MinimalADB Terminal 🎉\r\n");
+            terminal.write("🎉 Welcome to MinimalADB 🎉\r\n\r\nAny button actions or custom commands will be output here!\r\n\r\n");
         }
     
         // ADB output handling
