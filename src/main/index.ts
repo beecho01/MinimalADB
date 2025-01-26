@@ -1,6 +1,7 @@
-import { BrowserWindow, IpcMainEvent, app, ipcMain, nativeTheme } from "electron";
+import { BrowserWindow, IpcMainEvent, app, ipcMain, nativeTheme, dialog } from "electron";
 import { join } from "path";
 import { Adb } from '@devicefarmer/adbkit';
+import { spawn } from "child_process";
 
 export const adbPath = process.env.ADB_PATH || join(__dirname, "..", "platform-tools", "adb.exe");
 
@@ -41,6 +42,43 @@ const loadFileOrUrl = (browserWindow: BrowserWindow) => {
 };
 
 const registerIpcEventListeners = () => {
+    ipcMain.handle("run-adb-command", async (_event, command: string, options?: { onProgress?: (progress: string) => void }) => {
+        return new Promise((resolve, reject) => {
+            const args = command.split(' ').filter(arg => arg);
+            const adbProcess = spawn(adbPath, args);
+            
+            let stdout = '';
+            let stderr = '';
+
+            adbProcess.stdout.on('data', (data) => {
+                const output = data.toString();
+                stdout += output;
+                if (options?.onProgress && command.includes('sideload')) {
+                    options.onProgress(output);
+                }
+            });
+
+            adbProcess.stderr.on('data', (data) => {
+                const output = data.toString();
+                stderr += output;
+                if (options?.onProgress && command.includes('sideload')) {
+                    options.onProgress(output);
+                }
+            });
+
+            adbProcess.on('close', (code) => {
+                if (code === 0) {
+                    resolve({ stdout, stderr });
+                } else {
+                    reject(new Error(stderr || stdout));
+                }
+            });
+
+            adbProcess.on('error', (error) => {
+                reject(error);
+            });
+        });
+    });
 
     // Theme-related event
     ipcMain.on("themeShouldUseDarkColors", (event: IpcMainEvent) => {
@@ -62,12 +100,20 @@ const registerIpcEventListeners = () => {
     ipcMain.handle("run-shell-command", async (event, { deviceId, command }: { deviceId: string; command: string }) => {
         try {
             const device = client.getDevice(deviceId);
-            const outputBuffer = await device.shell(command).then(Adb.util.readAll); // Fix: Use `util.readAll` here
+            const outputBuffer = await device.shell(command).then(Adb.util.readAll);
             return outputBuffer.toString().trim();
         } catch (error) {
             console.error(`Error running shell command: ${command} on device ${deviceId}`, error);
             throw error;
         }
+    });
+
+    ipcMain.handle('show-open-dialog', async () => {
+        const result = await dialog.showOpenDialog({
+            properties: ["openFile"],
+            filters: [{ name: "ZIP Files", extensions: ["zip"] }],
+        });
+        return result;
     });
 };
 

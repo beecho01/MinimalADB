@@ -1,0 +1,54 @@
+/* Terminal.css */
+
+.p-terminal {
+    background-color: rgba(30, 30, 30, 0.3);
+    color: #ffffff;
+    font-family: 'Jetbrains Mono', monospace;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 10px;
+    height: 100%;
+    width: 100%;
+    overflow-y: overlay;
+    /* pointer-events: none; */
+    /* user-select: none; */
+}
+
+.p-terminal::-webkit-scrollbar {
+    background-color: transparent;
+    width: 12px;
+}
+
+.p-terminal::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+
+.p-terminal::-webkit-scrollbar-thumb {
+    border-radius: 20px;
+    border: 3px solid transparent;
+    background-color: rgba(0, 0, 0, 0.3);
+    background-clip: content-box;
+}
+
+.p-terminal-content {
+    font-family: 'Jetbrains Mono', monospace;
+    word-break: break-word;
+}
+
+.p-terminal-prompt {
+    color: rgba(255, 255, 255, 0.3);
+    font-family: 'Jetbrains Mono', monospace;
+}
+
+.p-terminal-response {
+    color: rgba(0, 128, 0, 1);
+    font-family: 'Jetbrains Mono', monospace;
+}
+
+.p-terminal-input {
+    color: #ffffff;
+    background-color: transparent;
+    border: none;
+    outline: none;
+    font-family: 'Jetbrains Mono', monospace;
+}

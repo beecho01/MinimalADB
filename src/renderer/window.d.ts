@@ -4,9 +4,12 @@ export declare global {
     interface Window {
         ContextBridge: ContextBridge;
         electron: {
-            invoke: (channel: string, ...args: unknown[]) => Promise<unknown>;
-            send: (channel: string, ...args: unknown[]) => void;
-            on: (channel: string, listener: (...args: unknown[]) => void) => void;
+            ipcRenderer: {
+                invoke(channel: "show-open-dialog"): Promise<{ canceled: boolean; filePaths: string[] }>;
+                invoke(channel: "run-adb-command", command: string, options?: { onProgress?: (progress: string) => void }): Promise<{ stdout: string; stderr: string }>;
+                send: (channel: string, ...args: unknown[]) => void;
+                on: (channel: string, listener: (...args: unknown[]) => void) => void;
+            };
         };
     }
 }

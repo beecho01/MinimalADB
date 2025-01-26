@@ -23,7 +23,16 @@ contextBridge.exposeInMainWorld("ContextBridge", <commonContextBridge>{
 
 // Expose additional Electron functionality
 contextBridge.exposeInMainWorld("electron", {
-    invoke: (channel: string, ...args: unknown[]) => ipcRenderer.invoke(channel, ...args),
+    ipcRenderer: {
+        invoke: (channel: string, ...args: unknown[]) => {
+            if (channel === 'run-adb-command') {
+                return ipcRenderer.invoke(channel, ...args);
+            }
+            return ipcRenderer.invoke(channel, ...args);
+        },
+        send: (channel: string, ...args: unknown[]) => ipcRenderer.send(channel, ...args),
+        on: (channel: string, listener: (...args: unknown[]) => void) => ipcRenderer.on(channel, listener),
+    },
     send: (channel: string, ...args: unknown[]) => ipcRenderer.send(channel, ...args),
     on: (channel: string, listener: (...args: unknown[]) => void) => ipcRenderer.on(channel, listener),
 });
