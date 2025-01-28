@@ -1,9 +1,12 @@
-import { BrowserWindow, IpcMainEvent, app, ipcMain, nativeTheme, dialog } from "electron";
-import { join } from "path";
-import { Adb } from '@devicefarmer/adbkit';
+import { Adb } from "@devicefarmer/adbkit";
 import { spawn } from "child_process";
+import { BrowserWindow, IpcMainEvent, app, dialog, ipcMain, nativeTheme } from "electron";
+import { readFileSync } from "fs";
+import fs from "fs/promises";
+import { join } from "path";
 
 export const adbPath = process.env.ADB_PATH || join(__dirname, "..", "platform-tools", "adb.exe");
+export const sourcePropertiesPath = join(__dirname, "..", "platform-tools", "source.properties");
 
 const client = Adb.createClient();
 
@@ -42,43 +45,46 @@ const loadFileOrUrl = (browserWindow: BrowserWindow) => {
 };
 
 const registerIpcEventListeners = () => {
-    ipcMain.handle("run-adb-command", async (_event, command: string, options?: { onProgress?: (progress: string) => void }) => {
-        return new Promise((resolve, reject) => {
-            const args = command.split(' ').filter(arg => arg);
-            const adbProcess = spawn(adbPath, args);
-            
-            let stdout = '';
-            let stderr = '';
+    ipcMain.handle(
+        "run-adb-command",
+        async (_event, command: string, options?: { onProgress?: (progress: string) => void }) => {
+            return new Promise((resolve, reject) => {
+                const args = command.split(" ").filter((arg) => arg);
+                const adbProcess = spawn(adbPath, args);
 
-            adbProcess.stdout.on('data', (data) => {
-                const output = data.toString();
-                stdout += output;
-                if (options?.onProgress && command.includes('sideload')) {
-                    options.onProgress(output);
-                }
-            });
+                let stdout = "";
+                let stderr = "";
 
-            adbProcess.stderr.on('data', (data) => {
-                const output = data.toString();
-                stderr += output;
-                if (options?.onProgress && command.includes('sideload')) {
-                    options.onProgress(output);
-                }
-            });
+                adbProcess.stdout.on("data", (data) => {
+                    const output = data.toString();
+                    stdout += output;
+                    if (options?.onProgress && command.includes("sideload")) {
+                        options.onProgress(output);
+                    }
+                });
 
-            adbProcess.on('close', (code) => {
-                if (code === 0) {
-                    resolve({ stdout, stderr });
-                } else {
-                    reject(new Error(stderr || stdout));
-                }
-            });
+                adbProcess.stderr.on("data", (data) => {
+                    const output = data.toString();
+                    stderr += output;
+                    if (options?.onProgress && command.includes("sideload")) {
+                        options.onProgress(output);
+                    }
+                });
 
-            adbProcess.on('error', (error) => {
-                reject(error);
+                adbProcess.on("close", (code) => {
+                    if (code === 0) {
+                        resolve({ stdout, stderr });
+                    } else {
+                        reject(new Error(stderr || stdout));
+                    }
+                });
+
+                adbProcess.on("error", (error) => {
+                    reject(error);
+                });
             });
-        });
-    });
+        },
+    );
 
     // Theme-related event
     ipcMain.on("themeShouldUseDarkColors", (event: IpcMainEvent) => {
@@ -89,7 +95,7 @@ const registerIpcEventListeners = () => {
     ipcMain.handle("list-devices", async () => {
         try {
             const devices = await client.listDevices();
-            return devices.map((device: { id: unknown; type: unknown; }) => ({ id: device.id, type: device.type }));
+            return devices.map((device: { id: unknown; type: unknown }) => ({ id: device.id, type: device.type }));
         } catch (error) {
             console.error("Failed to list devices:", error);
             throw error;
@@ -108,15 +114,39 @@ const registerIpcEventListeners = () => {
         }
     });
 
-    ipcMain.handle('show-open-dialog', async () => {
+    ipcMain.handle("show-open-dialog", async () => {
         const result = await dialog.showOpenDialog({
             properties: ["openFile"],
             filters: [{ name: "ZIP Files", extensions: ["zip"] }],
         });
         return result;
     });
-};
 
+    ipcMain.handle("get-app-version", async () => {
+        return app.getVersion();
+    });
+
+    ipcMain.handle("get-source-properties", async () => {
+        try {
+            const content = readFileSync(sourcePropertiesPath, "utf8");
+            const lines = content.split("\n");
+            const revisionLine = lines.find((line) => line.startsWith("Pkg.Revision="));
+            return revisionLine || "";
+        } catch (error) {
+            console.error("Error reading source.properties:", error);
+            return "";
+        }
+    });
+
+    ipcMain.handle("show-save-dialog", async (_event, options) => {
+        const result = await dialog.showSaveDialog(options);
+        return result;
+    });
+
+    ipcMain.handle("save-file", async (_event, { filePath, content }) => {
+        await fs.writeFile(filePath, content, "utf8");
+    });
+};
 
 const registerNativeThemeEventListeners = (allBrowserWindows: BrowserWindow[]) => {
     nativeTheme.addListener("updated", () => {
@@ -128,8 +158,8 @@ const registerNativeThemeEventListeners = (allBrowserWindows: BrowserWindow[]) =
 
 (async () => {
     await app.whenReady();
+    registerIpcEventListeners();
     const mainWindow = createBrowserWindow();
     loadFileOrUrl(mainWindow);
-    registerIpcEventListeners();
     registerNativeThemeEventListeners(BrowserWindow.getAllWindows());
 })();

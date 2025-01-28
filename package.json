@@ -1,12 +1,11 @@
 {
-    "name": "electron-fluent-ui",
-    "description": "Template for developing Electron applications using TypeScript and Fluent UI React components",
-    "version": "4.4.3",
+    "name": "minimaladb",
+    "description": "MinimalADB is a minimalistic Android ADB client for Windows based on Microsoft's Fluent UI.",
+    "version": "1.0.0",
     "license": "MIT",
     "author": {
-        "email": "oliver.schwendener@proton.me",
-        "name": "Oliver Schwendener",
-        "url": "https://github.com/oliverschwendener"
+        "name": "James Beeching",
+        "url": "https://github.com/beecho01"
     },
     "main": "dist-main/index.js",
     "scripts": {
@@ -16,11 +15,12 @@
         "package:publish": "electron-builder --config electron-builder.config.js --publish always",
         "package": "electron-builder --config electron-builder.config.js",
         "prettier:check": "prettier --check -- src/**/*.{ts,tsx}",
-        "prettier:write": "prettier --write -- src/**/*.{ts,tsx}",
+        "prettier": "prettier --write -- src/**/*.{ts,tsx}",
         "test:coverage": "vitest run --coverage",
         "test:watch": "vitest",
         "test": "vitest run",
-        "typecheck": "npm run typecheck:main && npm run typecheck:preload && npm run typecheck:renderer",
+        "typecheck:npm": "npm run typecheck:main && npm run typecheck:preload && npm run typecheck:renderer",
+        "typecheck:yarn": "yarn run typecheck:main && yarn run typecheck:preload && yarn run typecheck:renderer",
         "typecheck:main": "tsc -p src/main/tsconfig.json --noEmit",
         "typecheck:preload": "tsc -p src/preload/tsconfig.json --noEmit",
         "typecheck:renderer": "tsc -p src/renderer/tsconfig.json --noEmit"
@@ -34,6 +34,7 @@
         "@types/react-router-dom": "^5.3.3",
         "@vitejs/plugin-react": "^4.3.4",
         "@vitest/coverage-v8": "^2.1.8",
+        "dmg-builder": "25.1.8",
         "electron": "^33.2.0",
         "electron-builder": "^25.1.8",
         "eslint": "^9.17.0",
@@ -41,6 +42,7 @@
         "prettier": "^3.4.2",
         "prettier-plugin-organize-imports": "^4.1.0",
         "sass-embedded": "^1.83.4",
+        "scheduler": "0.23.0",
         "typescript": "^5.5.3",
         "typescript-eslint": "^8.18.2",
         "vite": "^6.0.6",
@@ -52,24 +54,16 @@
         "@devicefarmer/adbkit": "^3.3.8",
         "@fluentui/react-components": "^9.56.8",
         "@fluentui/react-icons": "^2.0.270",
-        "@fluentui/react-nav-preview": "^0.10.6",
-        "@xterm/addon-canvas": "^0.7.0",
-        "@xterm/addon-clipboard": "^0.5.0",
+        "@xterm/addon-clipboard": "^0.1.0",
         "@xterm/addon-fit": "^0.9.0",
         "@xterm/addon-unicode11": "^0.8.0",
         "@xterm/addon-webgl": "^0.18.0",
         "@xterm/xterm": "^5.5.0",
-        "bluebird": "^3.7.2",
         "electron-builder-squirrel-windows": "25.1.8",
         "jetbrains-mono": "^1.0.6",
-        "licia": "^1.46.0",
-        "primeicons": "^7.0.0",
-        "primereact": "^10.9.1",
         "react": "^18.3.1",
         "react-dom": "^18.3.1",
         "react-router": "^6.26.1",
-        "react-router-dom": "^6.26.1",
-        "scheduler": "0.23.0",
-        "terminal-in-react": "^4.3.1"
+        "react-router-dom": "^6.26.1"
     }
 }

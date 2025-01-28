@@ -12,14 +12,24 @@ import {
     Divider,
     FluentProvider,
     Input,
+    Link,
     makeStyles,
+    Menu,
+    MenuDivider,
+    MenuItem,
+    MenuList,
+    MenuPopover,
+    MenuTrigger,
     Title1,
     tokens,
+    Toolbar,
+    ToolbarButton,
+    ToolbarDivider,
     webDarkTheme,
     webLightTheme,
     type Theme,
 } from "@fluentui/react-components";
-import { SendRegular } from "@fluentui/react-icons";
+import { ArrowResetRegular, MoreHorizontalFilled, SaveRegular, SendRegular } from "@fluentui/react-icons";
 import { ClipboardAddon } from "@xterm/addon-clipboard";
 //import { FitAddon } from "@xterm/addon-fit";
 import { Terminal } from "@xterm/xterm";
@@ -56,8 +66,21 @@ const useStyles = makeStyles({
         flexDirection: "column",
         width: "calc(100vw - 400px)",
         gap: "20px",
-        padding: "70px 50px 45px 20px",
+        padding: "25px 50px 45px 20px",
         boxSizing: "border-box",
+    },
+    toolbar: {
+        display: "flex",
+        flexGrow: 1,
+        flexDirection: "row-reverse",
+        appRegion: "no-drag",
+        margin: "0px",
+        padding: "0px",
+    },
+    menuVersions: {
+        marginLeft: tokens.spacingHorizontalSNudge,
+        userSelect: "none",
+        padding: tokens.spacingVerticalSNudge,
     },
     terminal: {
         display: "flex",
@@ -67,20 +90,20 @@ const useStyles = makeStyles({
         margin: 0,
         overflow: "hidden",
         appRegion: "no-drag",
-        background: "rgba(0, 0, 0, 0.6)",
         borderRadius: "6px",
+        border: "1px solid var(--colorNeutralStroke3)",
         height: "100%",
         width: "calc(100% - 30px)",
         fontFamily: "Jetbrains Mono",
         fontSize: "14px",
-        '& .xterm-viewport': {
+        "& .xterm-viewport": {
             background: "rgba(0, 0, 0, 0)",
-            '&::-webkit-scrollbar': {
-                display: 'none'
-            }
+            "&::-webkit-scrollbar": {
+                display: "none",
+            },
         },
-        '& .xterm': {
-            userSelect: 'text',
+        "& .xterm": {
+            userSelect: "text",
         },
     },
     sidebar: {
@@ -162,21 +185,50 @@ export const App = () => {
     const styles = useStyles();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [dialogTitle, setDialogTitle] = useState<string>("");
-    const [dialogMessage, setDialogMessage] = useState<string>("");
+    const [dialogMessage, setDialogMessage] = useState<React.ReactNode>("");
     const [filePath, setFilePath] = React.useState("");
     const terminalRef = useRef<HTMLDivElement>(null);
     const [terminal, setTerminal] = useState<Terminal | null>(null);
     const [customCommandInput, setCustomCommandInput] = useState("");
+    const [adbVersion, setAdbVersion] = useState<string>("");
+    const [appVersion, setAppVersion] = useState<string>("");
+
+    const getAdbVersion = async () => {
+        try {
+            const versionLine = await window.electron.ipcRenderer.invoke("get-source-properties");
+            const adbVersion = versionLine.split("=")[1] || "Unknown";
+            setAdbVersion(adbVersion);
+            return adbVersion;
+        } catch (error) {
+            console.error("Error getting ADB version:", error);
+            setAdbVersion("Unknown");
+            return "Unknown";
+        }
+    };
+
+    const getAppVersion = async () => {
+        try {
+            const appVersion = await window.electron.ipcRenderer.invoke("get-app-version");
+            setAppVersion(appVersion);
+            return appVersion;
+        } catch (error) {
+            console.error("Error getting app version:", error);
+            setAppVersion("Unknown");
+            return "Unknown";
+        }
+    };
 
     const handleErrorOutput = (error: unknown) => {
         if (error instanceof Error) {
-            const match = error.message.match(/Error invoking remote method '[^']+': (.+)/);
+            // Match either the full IPC error pattern or just the ADB error pattern
+            const match = error.message.match(/Error invoking remote method '[^']+': (?:Error: )?(.*)/);
             if (match) {
                 try {
                     const innerError = JSON.parse(match[1]);
-                    return String(innerError.stderr || innerError.message || error.message);
+                    return String(innerError.stderr || innerError.message || match[1]);
                 } catch {
-                    return error.message;
+                    // If JSON parsing fails, just return the captured error message
+                    return match[1];
                 }
             }
         }
@@ -188,9 +240,15 @@ export const App = () => {
             terminal.write("adb devices\r\n");
             try {
                 const output = await window.electron.ipcRenderer.invoke("run-adb-command", "devices");
-                terminal.write(String(output.stdout || output.stderr || output) + "\r\n> ");
+                terminal.write("\x1b[32m");
+                terminal.write(String(output.stdout || output.stderr || output));
+                terminal.write("\x1b[0m");
+                terminal.write("\r\n> ");
             } catch (error) {
-                terminal.write(`${handleErrorOutput(error)}\r\n> `);
+                terminal.write("\x1b[31m");
+                terminal.write(`${handleErrorOutput(error)}`);
+                terminal.write("\x1b[0m");
+                terminal.write("\r\n> ");
             }
         }
     };
@@ -200,9 +258,15 @@ export const App = () => {
             terminal.write("adb reboot recovery\r\n");
             try {
                 const output = await window.electron.ipcRenderer.invoke("run-adb-command", "reboot recovery");
-                terminal.write(String(output.stdout || output.stderr || output) + "\r\n\r\n> ");
+                terminal.write("\x1b[32m");
+                terminal.write(String(output.stdout || output.stderr || output));
+                terminal.write("\x1b[0m");
+                terminal.write("\r\n\r\n> ");
             } catch (error) {
-                terminal.write(`${handleErrorOutput(error)}\r\n\r\n> `);
+                terminal.write("\x1b[31m");
+                terminal.write(`${handleErrorOutput(error)}`);
+                terminal.write("\x1b[0m");
+                terminal.write("\r\n\r\n> ");
             }
         }
     };
@@ -214,11 +278,17 @@ export const App = () => {
                 const actualCmd = customCommandInput.toLowerCase().startsWith("adb ")
                     ? customCommandInput.slice(4).trim()
                     : customCommandInput.trim();
-                
+
                 const output = await window.electron.ipcRenderer.invoke("run-adb-command", actualCmd);
-                terminal.write(String(output.stdout || output.stderr || output) + "\r\n\r\n> ");
+                terminal.write("\x1b[32m");
+                terminal.write(String(output.stdout || output.stderr || output));
+                terminal.write("\x1b[0m");
+                terminal.write("\r\n\r\n> ");
             } catch (error) {
-                terminal.write(`${handleErrorOutput(error)}\r\n\r\n> `);
+                terminal.write("\x1b[31m");
+                terminal.write(`${handleErrorOutput(error)}`);
+                terminal.write("\x1b[0m");
+                terminal.write("\r\n\r\n> ");
             }
             setCustomCommandInput("");
         }
@@ -239,27 +309,35 @@ export const App = () => {
             return;
         }
         if (terminal) {
-            terminal.write("adb sideload \"" + filePath + "\"\r\n");
+            terminal.write('adb sideload "' + filePath + '"\r\n');
             try {
-                // Create a progress bar line in the terminal
-                terminal.write("Progress: [                                        ] 0%\r");
-                
-                const output = await window.electron.ipcRenderer.invoke("run-adb-command", "sideload \"" + filePath + "\"", {
-                    onProgress: (progress: string) => {
-                        // Parse the progress percentage from ADB output
-                        const match = progress.match(/(\d+)%/);
-                        if (match) {
-                            const percent = parseInt(match[1], 10);
-                            const filled = Math.floor(percent / 2.5);
-                            const empty = 40 - filled;
-                            const bar = "=".repeat(filled) + ">".padEnd(empty);
-                            terminal.write(`\rProgress: [${bar}] ${percent}%`);
-                        }
-                    }
-                });
-                terminal.write("\r\n" + String(output.stdout || output.stderr || output) + "\r\n\r\n> ");
+                terminal.write("\x1b[32m");
+
+                const output = await window.electron.ipcRenderer.invoke(
+                    "run-adb-command",
+                    'sideload "' + filePath + '"',
+                    {
+                        onProgress: (progress: string) => {
+                            const match = progress.match(/(\d+)%/);
+                            if (match) {
+                                terminal.write("Progress: [                                          ] 0%\r");
+                                const percent = parseInt(match[1], 10);
+                                const filled = Math.floor(percent / 2.381);
+                                const empty = 42 - filled;
+                                const bar = "=".repeat(filled) + ">".padEnd(empty);
+                                terminal.write(`\rProgress: [${bar}] ${percent}%`);
+                            }
+                        },
+                    },
+                );
+                terminal.write(`${String(output.stdout || output.stderr || output)}`);
+                terminal.write("\x1b[0m");
+                terminal.write("\r\n\r\n> ");
             } catch (error) {
-                terminal.write(`\r\n${handleErrorOutput(error)}\r\n\r\n> `);
+                terminal.write("\x1b[31m");
+                terminal.write(`${handleErrorOutput(error)}`);
+                terminal.write("\x1b[0m");
+                terminal.write("\r\n\r\n> ");
             }
         }
     };
@@ -273,6 +351,85 @@ export const App = () => {
         } catch (error) {
             return handleErrorOutput(error);
         }
+    };
+
+    const handleSaveTerminalContents = async () => {
+        if (!terminal) return;
+
+        // Get terminal content and remove trailing empty lines
+        const lines: string[] = [];
+        for (let i = 0; i < terminal.buffer.active.length; i++) {
+            const line = terminal.buffer.active.getLine(i);
+            if (line) {
+                lines.push(line.translateToString());
+            }
+        }
+
+        // Remove trailing empty lines while preserving content
+        while (lines.length > 0 && lines[lines.length - 1].trim() === "") {
+            lines.pop();
+        }
+        const content = lines.join("\n");
+
+        try {
+            // Show save dialog
+            const result = await window.electron.ipcRenderer.invoke("show-save-dialog", {
+                filters: [
+                    { name: "Text Files", extensions: ["txt"] },
+                    { name: "Log Files", extensions: ["log"] },
+                ],
+                defaultPath: `terminal_output_${new Date().toISOString().replace(/[:.]/g, "-")}.txt`,
+            });
+
+            if (!result.canceled && result.filePath) {
+                // Save the file
+                await window.electron.ipcRenderer.invoke("save-file", {
+                    filePath: result.filePath,
+                    content: content,
+                });
+            }
+        } catch (error) {
+            console.error("Error saving terminal contents:", error);
+            setDialogTitle("Save Error");
+            setDialogMessage("Failed to save terminal contents: " + String(error));
+            setIsDialogOpen(true);
+        }
+    };
+
+    const showLicenseDialog = () => {
+        setDialogTitle("Software License Details");
+        setDialogMessage(
+            <span>
+                MinimalADB and its third-party components are licensed under the following terms:
+                <ul>
+                    <li>
+                        MinimalADB:{" "}
+                        <Link href="https://github.com/beecho01/MinimalADB/blob/main/LICENSE" target="_blank">
+                            MIT License
+                        </Link>
+                    </li>
+                    <li>
+                        Android Platform Tools:{" "}
+                        <Link href="https://developer.android.com/license" target="_blank">
+                            Apache License 2.0
+                        </Link>
+                    </li>
+                    <li>
+                        Jetbrains Mono Font:{" "}
+                        <Link href="https://www.jetbrains.com/lp/mono/#license" target="_blank">
+                            SIL Open Font License 1.1
+                        </Link>
+                    </li>
+                    <li>
+                        Electron:{" "}
+                        <Link href="https://github.com/electron/electron/blob/main/LICENSE" target="_blank">
+                            MIT License
+                        </Link>
+                    </li>
+                </ul>
+            </span>,
+        );
+        setIsDialogOpen(true);
     };
 
     useEffect(() => {
@@ -302,20 +459,21 @@ export const App = () => {
                 fontFamily: "Jetbrains Mono",
                 fontSize: 14,
                 theme: {
-                    background: "rgba(0, 0, 0, 0)"
+                    background: theme === webDarkTheme ? "rgba(0, 0, 0, 0)" : "rgba(255, 255, 255, 0)",
+                    foreground: theme === webDarkTheme ? "#FFFFFF" : "#000000",
                 },
                 cursorInactiveStyle: "bar",
                 disableStdin: true,
-                rows: 39,
+                rows: 37,
                 cols: 59,
                 rightClickSelectsWord: true,
-                cursorBlink: true
+                cursorBlink: true,
             });
 
             const clipboardAddon = new ClipboardAddon();
             term.loadAddon(clipboardAddon);
 
-            terminalRef.current.addEventListener('contextmenu', (event) => {
+            terminalRef.current.addEventListener("contextmenu", (event) => {
                 event.preventDefault();
                 const selection = term.getSelection();
                 if (selection) {
@@ -334,7 +492,15 @@ export const App = () => {
                     if (line) {
                         const command = line.substring(2).trim();
                         commandHandler(command).then((output) => {
-                            term.write("\r\n" + output + "\r\n> ");
+                            term.write("\r\n");
+                            if (output.toLowerCase().includes("error") || output.toLowerCase().includes("failed")) {
+                                term.write("\x1b[31m");
+                            } else {
+                                term.write("\x1b[32m");
+                            }
+                            term.write(output);
+                            term.write("\x1b[0m");
+                            term.write("\r\n> ");
                         });
                     }
                 } else {
@@ -349,6 +515,14 @@ export const App = () => {
             }
         };
     }, [terminalRef.current]);
+
+    useEffect(() => {
+        getAdbVersion();
+    }, []);
+
+    useEffect(() => {
+        getAppVersion();
+    }, []);
 
     return (
         <FluentProvider theme={theme} className={styles.fluentProvider}>
@@ -394,7 +568,9 @@ export const App = () => {
                     <Card appearance="subtle" className={styles.card}>
                         <CardHeader header={<Body1Strong className={styles.stepHeader}>Step 4</Body1Strong>} />
                         <caption className={styles.stepCaption}>Sideload the ROM file to your device.</caption>
-                        <Button appearance="primary" onClick={handleSideloadClick}>Flash device</Button>
+                        <Button appearance="primary" onClick={handleSideloadClick}>
+                            Flash device
+                        </Button>
                     </Card>
                     <Divider />
                     <Card appearance="subtle" className={styles.card}>
@@ -425,14 +601,55 @@ export const App = () => {
                     </Card>
                 </div>
                 <div className={styles.workspace}>
-                    <div className={styles.terminal} ref={terminalRef} spellCheck={false} />
+                    <Toolbar className={styles.toolbar}>
+                        <Menu>
+                            <MenuTrigger>
+                                <ToolbarButton aria-label="More" icon={<MoreHorizontalFilled />} onClick={() => {}} />
+                            </MenuTrigger>
+                            <MenuPopover>
+                                <MenuList>
+                                    <div className={styles.menuVersions}>MinimalADB Version: {appVersion}</div>
+                                    <MenuItem disabled={true} onClick={() => {}}>
+                                        Check for MinimalADB Updates
+                                    </MenuItem>
+                                    <MenuDivider />
+                                    <div className={styles.menuVersions}>Current ADB Version: {adbVersion}</div>
+                                    <MenuItem disabled={true} onClick={() => {}}>
+                                        Get Latest Platform Tools
+                                    </MenuItem>
+                                    <MenuDivider />
+                                    <MenuItem onClick={showLicenseDialog}>Software License Details</MenuItem>
+                                </MenuList>
+                            </MenuPopover>
+                        </Menu>
+                        <ToolbarDivider />
+                        <ToolbarButton
+                            aria-label="Save Terminal Contents"
+                            icon={<SaveRegular />}
+                            onClick={handleSaveTerminalContents}
+                        />
+                        <ToolbarButton
+                            aria-label="Reset Terminal Contents"
+                            icon={<ArrowResetRegular />}
+                            onClick={() => {
+                                terminal?.reset();
+                                terminal?.write("> ");
+                            }}
+                        />
+                    </Toolbar>
+                    <div
+                        className={styles.terminal}
+                        style={{
+                            background: theme === webDarkTheme ? "rgba(0, 0, 0, 0.6)" : "rgba(255, 255, 255, 0.6)",
+                        }}
+                        ref={terminalRef}
+                        spellCheck={false}
+                    />
                     <Dialog open={isDialogOpen} modalType="alert">
                         <DialogSurface>
                             <DialogBody>
                                 <DialogTitle>{dialogTitle}</DialogTitle>
-                                <DialogContent>
-                                    {dialogMessage}
-                                </DialogContent>
+                                <DialogContent>{dialogMessage}</DialogContent>
                                 <DialogActions>
                                     <Button appearance="secondary" onClick={() => setIsDialogOpen(false)}>
                                         Close

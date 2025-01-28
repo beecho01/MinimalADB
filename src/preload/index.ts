@@ -24,11 +24,19 @@ contextBridge.exposeInMainWorld("ContextBridge", <commonContextBridge>{
 // Expose additional Electron functionality
 contextBridge.exposeInMainWorld("electron", {
     ipcRenderer: {
-        invoke: (channel: string, ...args: unknown[]) => {
-            if (channel === 'run-adb-command') {
+        invoke: async (channel: string, ...args: unknown[]) => {
+            const validChannels = [
+                "show-open-dialog",
+                "run-adb-command",
+                "get-source-properties",
+                "get-app-version",
+                "show-save-dialog",
+                "save-file",
+            ];
+            if (validChannels.includes(channel)) {
                 return ipcRenderer.invoke(channel, ...args);
             }
-            return ipcRenderer.invoke(channel, ...args);
+            throw new Error(`Invalid channel: ${channel}`);
         },
         send: (channel: string, ...args: unknown[]) => ipcRenderer.send(channel, ...args),
         on: (channel: string, listener: (...args: unknown[]) => void) => ipcRenderer.on(channel, listener),
