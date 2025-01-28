@@ -45,46 +45,43 @@ const loadFileOrUrl = (browserWindow: BrowserWindow) => {
 };
 
 const registerIpcEventListeners = () => {
-    ipcMain.handle(
-        "run-adb-command",
-        async (_event, command: string, options?: { onProgress?: (progress: string) => void }) => {
-            return new Promise((resolve, reject) => {
-                const args = command.split(" ").filter((arg) => arg);
-                const adbProcess = spawn(adbPath, args);
+    ipcMain.handle("run-adb-command", async (_event, command: string) => {
+        return new Promise((resolve, reject) => {
+            let args: string[];
+            if (command.startsWith("sideload ")) {
+                const filePath = command.substring(9).trim().replace(/^"|"$/g, "");
+                args = ["sideload", filePath];
+            } else {
+                args = command.split(/\s+/).filter(Boolean);
+            }
 
-                let stdout = "";
-                let stderr = "";
+            const adbProcess = spawn(adbPath, args);
+            let stdout = "";
+            let stderr = "";
 
-                adbProcess.stdout.on("data", (data) => {
-                    const output = data.toString();
-                    stdout += output;
-                    if (options?.onProgress && command.includes("sideload")) {
-                        options.onProgress(output);
-                    }
-                });
-
-                adbProcess.stderr.on("data", (data) => {
-                    const output = data.toString();
-                    stderr += output;
-                    if (options?.onProgress && command.includes("sideload")) {
-                        options.onProgress(output);
-                    }
-                });
-
-                adbProcess.on("close", (code) => {
-                    if (code === 0) {
-                        resolve({ stdout, stderr });
-                    } else {
-                        reject(new Error(stderr || stdout));
-                    }
-                });
-
-                adbProcess.on("error", (error) => {
-                    reject(error);
-                });
+            adbProcess.stdout.on("data", (data) => {
+                console.log("stdout data:", data);
+                stdout += data.toString();
             });
-        },
-    );
+
+            adbProcess.stderr.on("data", (data) => {
+                console.log("stderr data:", data);
+                stderr += data.toString();
+            });
+
+            adbProcess.on("close", (code) => {
+                if (code === 0) {
+                    resolve({ stdout, stderr });
+                } else {
+                    reject(new Error(stderr || stdout));
+                }
+            });
+
+            adbProcess.on("error", (error) => {
+                reject(error);
+            });
+        });
+    });
 
     // Theme-related event
     ipcMain.on("themeShouldUseDarkColors", (event: IpcMainEvent) => {
@@ -100,6 +97,44 @@ const registerIpcEventListeners = () => {
             console.error("Failed to list devices:", error);
             throw error;
         }
+    });
+
+    ipcMain.on("sideload-file", (event, filePath: string) => {
+        const adbProcess = spawn(adbPath, ["sideload", filePath]);
+
+        adbProcess.stdout.on("data", (data) => {
+            const outputStr = data.toString();
+
+            // Log the raw output
+            console.log("ADB sideload STDOUT chunk:", outputStr);
+
+            // Look for "XX%" in the output
+            const match = outputStr.match(/(\d+)%/);
+            if (match) {
+                const percent = parseInt(match[1], 10);
+                event.sender.send("sideload-progress", { percent });
+            } else {
+                // If no percentage is found, forward data to keep a raw log
+                event.sender.send("sideload-stdout", outputStr);
+            }
+        });
+
+        adbProcess.stderr.on("data", (data) => {
+            const outputStr = data.toString();
+            console.error("ADB sideload STDERR chunk:", outputStr);
+            event.sender.send("sideload-stderr", outputStr);
+        });
+
+        adbProcess.on("close", (code) => {
+            event.sender.send("sideload-complete", {
+                code,
+                success: code === 0,
+            });
+        });
+
+        adbProcess.on("error", (error) => {
+            event.sender.send("sideload-error", error.message);
+        });
     });
 
     // Handle running shell commands on a device

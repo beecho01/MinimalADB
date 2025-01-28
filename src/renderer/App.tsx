@@ -31,7 +31,6 @@ import {
 } from "@fluentui/react-components";
 import { ArrowResetRegular, MoreHorizontalFilled, SaveRegular, SendRegular } from "@fluentui/react-icons";
 import { ClipboardAddon } from "@xterm/addon-clipboard";
-//import { FitAddon } from "@xterm/addon-fit";
 import { Terminal } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
 import "jetbrains-mono/css/jetbrains-mono.css";
@@ -40,7 +39,7 @@ import React, { useEffect, useRef, useState } from "react";
 const shouldUseDarkColors = (): boolean =>
     window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
 
-const getTheme = () => (shouldUseDarkColors() ? webDarkTheme : webLightTheme);
+export const getTheme = () => (shouldUseDarkColors() ? webDarkTheme : webLightTheme);
 
 const useStyles = makeStyles({
     fluentProvider: {
@@ -198,10 +197,11 @@ export const App = () => {
             const versionLine = await window.electron.ipcRenderer.invoke("get-source-properties");
             const adbVersion = versionLine.split("=")[1] || "Unknown";
             setAdbVersion(adbVersion);
+            console.log("ADB Version:", adbVersion);
             return adbVersion;
         } catch (error) {
             console.error("Error getting ADB version:", error);
-            setAdbVersion("Unknown");
+            setAdbVersion("ADB Version: Unknown");
             return "Unknown";
         }
     };
@@ -210,10 +210,11 @@ export const App = () => {
         try {
             const appVersion = await window.electron.ipcRenderer.invoke("get-app-version");
             setAppVersion(appVersion);
+            console.log("App Version:", appVersion);
             return appVersion;
         } catch (error) {
             console.error("Error getting app version:", error);
-            setAppVersion("Unknown");
+            setAppVersion("App Version: Unknown");
             return "Unknown";
         }
     };
@@ -228,6 +229,7 @@ export const App = () => {
                     return String(innerError.stderr || innerError.message || match[1]);
                 } catch {
                     // If JSON parsing fails, just return the captured error message
+                    console.log(match[1]);
                     return match[1];
                 }
             }
@@ -243,12 +245,14 @@ export const App = () => {
                 terminal.write("\x1b[32m");
                 terminal.write(String(output.stdout || output.stderr || output));
                 terminal.write("\x1b[0m");
-                terminal.write("\r\n> ");
+                terminal.write("\r> ");
+                console.log(output);
             } catch (error) {
                 terminal.write("\x1b[31m");
                 terminal.write(`${handleErrorOutput(error)}`);
                 terminal.write("\x1b[0m");
-                terminal.write("\r\n> ");
+                terminal.write("\r> ");
+                console.log(error);
             }
         }
     };
@@ -259,14 +263,17 @@ export const App = () => {
             try {
                 const output = await window.electron.ipcRenderer.invoke("run-adb-command", "reboot recovery");
                 terminal.write("\x1b[32m");
-                terminal.write(String(output.stdout || output.stderr || output));
+                const outputStr = output.stdout || output.stderr || "Device is rebooting to recovery mode";
+                terminal.write(outputStr);
                 terminal.write("\x1b[0m");
                 terminal.write("\r\n\r\n> ");
+                console.log(output);
             } catch (error) {
                 terminal.write("\x1b[31m");
                 terminal.write(`${handleErrorOutput(error)}`);
                 terminal.write("\x1b[0m");
                 terminal.write("\r\n\r\n> ");
+                console.log(error);
             }
         }
     };
@@ -284,11 +291,13 @@ export const App = () => {
                 terminal.write(String(output.stdout || output.stderr || output));
                 terminal.write("\x1b[0m");
                 terminal.write("\r\n\r\n> ");
+                console.log(output);
             } catch (error) {
                 terminal.write("\x1b[31m");
                 terminal.write(`${handleErrorOutput(error)}`);
                 terminal.write("\x1b[0m");
                 terminal.write("\r\n\r\n> ");
+                console.log(error);
             }
             setCustomCommandInput("");
         }
@@ -306,39 +315,12 @@ export const App = () => {
             setDialogTitle("No File Selected");
             setDialogMessage("Please select a file to sideload first.");
             setIsDialogOpen(true);
+            console.log("No file selected");
             return;
         }
+        window.electron.ipcRenderer.send("sideload-file", filePath);
         if (terminal) {
-            terminal.write('adb sideload "' + filePath + '"\r\n');
-            try {
-                terminal.write("\x1b[32m");
-
-                const output = await window.electron.ipcRenderer.invoke(
-                    "run-adb-command",
-                    'sideload "' + filePath + '"',
-                    {
-                        onProgress: (progress: string) => {
-                            const match = progress.match(/(\d+)%/);
-                            if (match) {
-                                terminal.write("Progress: [                                          ] 0%\r");
-                                const percent = parseInt(match[1], 10);
-                                const filled = Math.floor(percent / 2.381);
-                                const empty = 42 - filled;
-                                const bar = "=".repeat(filled) + ">".padEnd(empty);
-                                terminal.write(`\rProgress: [${bar}] ${percent}%`);
-                            }
-                        },
-                    },
-                );
-                terminal.write(`${String(output.stdout || output.stderr || output)}`);
-                terminal.write("\x1b[0m");
-                terminal.write("\r\n\r\n> ");
-            } catch (error) {
-                terminal.write("\x1b[31m");
-                terminal.write(`${handleErrorOutput(error)}`);
-                terminal.write("\x1b[0m");
-                terminal.write("\r\n\r\n> ");
-            }
+            terminal.write(`adb sideload "${filePath}"\r\n`);
         }
     };
 
@@ -349,6 +331,7 @@ export const App = () => {
             const output = await window.electron.ipcRenderer.invoke("run-adb-command", actualCmd);
             return String(output.stdout || output.stderr || output);
         } catch (error) {
+            console.log("Error running command:", error);
             return handleErrorOutput(error);
         }
     };
@@ -440,6 +423,7 @@ export const App = () => {
                 setDialogTitle("Device Connection Error");
                 setDialogMessage(message);
                 setIsDialogOpen(true);
+                console.log("Device Connection Error:", message);
             } else {
                 console.error("Unexpected message type:", message);
             }
@@ -523,6 +507,50 @@ export const App = () => {
     useEffect(() => {
         getAppVersion();
     }, []);
+
+    useEffect(() => {
+        const onProgress = (_event: unknown, ...args: unknown[]) => {
+            const data = args[0] as { percent: number };
+            const progress = data.percent;
+            const filled = Math.floor(progress / 2.381);
+            const empty = 42 - filled;
+            const bar = "=".repeat(filled) + ">".padEnd(empty);
+            terminal?.write(`\rProgress: [${bar}] ${progress}%`);
+        };
+
+        const onComplete = (_event: unknown, ...args: unknown[]) => {
+            const data = args[0] as { code: number; success: boolean };
+            if (data.success) {
+                terminal?.write(`\r\nSideload complete!)\r\n\r\n> `);
+            } else {
+                terminal?.write(`\r\nSideload failed (exit code ${data.code})\r\n\r\n> `);
+            }
+        };
+
+        const onError = (_event: unknown, ...args: unknown[]) => {
+            const error = args[0] as string;
+            terminal?.write(`\r\n\r\nSideload error: ${error}\r\n> `);
+        };
+
+        // Attach listeners
+        window.electron.ipcRenderer.on("sideload-progress", onProgress);
+        window.electron.ipcRenderer.on("sideload-complete", onComplete);
+        window.electron.ipcRenderer.on("sideload-error", onError);
+
+        return () => {
+            // Safely remove listeners
+            if (window.electron.ipcRenderer.removeAllListeners) {
+                window.electron.ipcRenderer.removeAllListeners("sideload-progress");
+                window.electron.ipcRenderer.removeAllListeners("sideload-complete");
+                window.electron.ipcRenderer.removeAllListeners("sideload-error");
+            } else {
+                // Fallback to removeListener if available
+                window.electron.ipcRenderer.removeListener?.("sideload-progress", onProgress);
+                window.electron.ipcRenderer.removeListener?.("sideload-complete", onComplete);
+                window.electron.ipcRenderer.removeListener?.("sideload-error", onError);
+            }
+        };
+    }, [terminal]);
 
     return (
         <FluentProvider theme={theme} className={styles.fluentProvider}>
