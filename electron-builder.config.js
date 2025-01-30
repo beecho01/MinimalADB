@@ -1,7 +1,3 @@
-/**
- * @type {import('electron-builder').Configuration}
- * @see https://www.electron.build/configuration/configuration
- */
 const baseConfig = {
     appId: "uk.co.beecho01.MinimalADB",
     productName: "MinimalADB",
@@ -15,23 +11,19 @@ const baseConfig = {
     },
 };
 
-/**
- * @type {Record<NodeJS.Platform, import('electron-builder').Configuration>}
- */
 const platformSpecificConfigurations = {
     win32: {
         ...baseConfig,
         win: {
-            icon: "build/app-icon-dark.png", // Path to your Windows icon
+            icon: "build/app-icon-dark.png",
             target: [
-                { target: "msi" }, // Build MSI installer
-                { target: "zip" }, // Build ZIP archive
+                { target: "msi" },
+                { target: "zip" },
             ],
         },
     },
 };
 
-// Ensure we only export valid configurations for supported platforms
 const config = platformSpecificConfigurations[process.platform];
 if (!config) {
     throw new Error(
