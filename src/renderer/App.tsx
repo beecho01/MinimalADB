@@ -20,7 +20,6 @@ import {
     MenuList,
     MenuPopover,
     MenuTrigger,
-    Title1,
     tokens,
     Toolbar,
     ToolbarButton,
@@ -128,6 +127,11 @@ const useStyles = makeStyles({
         appRegion: "no-drag",
         userSelect: "none",
     },
+    logo: {
+        height: "44px",
+        marginBottom: "-12px",
+        paddingTop: "8px",
+    },
     card: {
         maxWidth: "100%",
         height: "fit-content",
@@ -197,10 +201,11 @@ export const App = () => {
             const versionLine = await window.electron.ipcRenderer.invoke("get-source-properties");
             const adbVersion = versionLine.split("=")[1] || "Unknown";
             setAdbVersion(adbVersion);
-            console.log("ADB Version:", adbVersion);
+            //console.log("ADB Version:", adbVersion);
             return adbVersion;
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
-            console.error("Error getting ADB version:", error);
+            //console.error("Error getting ADB version:", error);
             setAdbVersion("ADB Version: Unknown");
             return "Unknown";
         }
@@ -210,10 +215,11 @@ export const App = () => {
         try {
             const appVersion = await window.electron.ipcRenderer.invoke("get-app-version");
             setAppVersion(appVersion);
-            console.log("App Version:", appVersion);
+            //console.log("App Version:", appVersion);
             return appVersion;
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
-            console.error("Error getting app version:", error);
+            //console.error("Error getting app version:", error);
             setAppVersion("App Version: Unknown");
             return "Unknown";
         }
@@ -229,7 +235,7 @@ export const App = () => {
                     return String(innerError.stderr || innerError.message || match[1]);
                 } catch {
                     // If JSON parsing fails, just return the captured error message
-                    console.log(match[1]);
+                    //console.log(match[1]);
                     return match[1];
                 }
             }
@@ -246,13 +252,13 @@ export const App = () => {
                 terminal.write(String(output.stdout || output.stderr || output));
                 terminal.write("\x1b[0m");
                 terminal.write("\r> ");
-                console.log(output);
+                //console.log(output);
             } catch (error) {
                 terminal.write("\x1b[31m");
                 terminal.write(`${handleErrorOutput(error)}`);
                 terminal.write("\x1b[0m");
                 terminal.write("\r> ");
-                console.log(error);
+                //console.log(error);
             }
         }
     };
@@ -267,13 +273,13 @@ export const App = () => {
                 terminal.write(outputStr);
                 terminal.write("\x1b[0m");
                 terminal.write("\r\n\r\n> ");
-                console.log(output);
+                //console.log(output);
             } catch (error) {
                 terminal.write("\x1b[31m");
                 terminal.write(`${handleErrorOutput(error)}`);
                 terminal.write("\x1b[0m");
                 terminal.write("\r\n\r\n> ");
-                console.log(error);
+                //console.log(error);
             }
         }
     };
@@ -291,13 +297,13 @@ export const App = () => {
                 terminal.write(String(output.stdout || output.stderr || output));
                 terminal.write("\x1b[0m");
                 terminal.write("\r\n\r\n> ");
-                console.log(output);
+                //console.log(output);
             } catch (error) {
                 terminal.write("\x1b[31m");
                 terminal.write(`${handleErrorOutput(error)}`);
                 terminal.write("\x1b[0m");
                 terminal.write("\r\n\r\n> ");
-                console.log(error);
+                //console.log(error);
             }
             setCustomCommandInput("");
         }
@@ -315,7 +321,7 @@ export const App = () => {
             setDialogTitle("No File Selected");
             setDialogMessage("Please select a file to sideload first.");
             setIsDialogOpen(true);
-            console.log("No file selected");
+            //console.log("No file selected");
             return;
         }
         window.electron.ipcRenderer.send("sideload-file", filePath);
@@ -327,11 +333,11 @@ export const App = () => {
     const commandHandler = async (cmd: string) => {
         try {
             const actualCmd = cmd.toLowerCase().startsWith("adb ") ? cmd.slice(4).trim() : cmd.trim();
-            console.log("actualCmd", actualCmd);
+            //console.log("actualCmd", actualCmd);
             const output = await window.electron.ipcRenderer.invoke("run-adb-command", actualCmd);
             return String(output.stdout || output.stderr || output);
         } catch (error) {
-            console.log("Error running command:", error);
+            //console.log("Error running command:", error);
             return handleErrorOutput(error);
         }
     };
@@ -372,7 +378,7 @@ export const App = () => {
                 });
             }
         } catch (error) {
-            console.error("Error saving terminal contents:", error);
+            //console.error("Error saving terminal contents:", error);
             setDialogTitle("Save Error");
             setDialogMessage("Failed to save terminal contents: " + String(error));
             setIsDialogOpen(true);
@@ -515,21 +521,23 @@ export const App = () => {
             const filled = Math.floor(progress / 2.381);
             const empty = 42 - filled;
             const bar = "=".repeat(filled) + ">".padEnd(empty);
+            terminal?.write("\x1b[32m");
             terminal?.write(`\rProgress: [${bar}] ${progress}%`);
+            terminal?.write("\x1b[0m");
         };
 
         const onComplete = (_event: unknown, ...args: unknown[]) => {
             const data = args[0] as { code: number; success: boolean };
             if (data.success) {
-                terminal?.write(`\r\nSideload complete!)\r\n\r\n> `);
+                terminal?.write(`\r\x1b[32mSideload complete!)\x1b[0m\r\n\r\n> `);
             } else {
-                terminal?.write(`\r\nSideload failed (exit code ${data.code})\r\n\r\n> `);
+                terminal?.write(`\r\x1b[31mSideload failed (exit code ${data.code})\x1b[0m\r\n\r\n> `);
             }
         };
 
         const onError = (_event: unknown, ...args: unknown[]) => {
             const error = args[0] as string;
-            terminal?.write(`\r\n\r\nSideload error: ${error}\r\n> `);
+            terminal?.write(`\r\n\x1b[31mSideload error: ${error}\x1b[0m\r\n> `);
         };
 
         // Attach listeners
@@ -557,9 +565,16 @@ export const App = () => {
             <div className={styles.main}>
                 <div className={styles.sidebar}>
                     <div>
-                        <Title1 className={styles.title}>MinimalADB</Title1>
+                        {theme === webDarkTheme ? (
+                            <img src="assets/MinimalADB_White_Small.png" alt="MinimalADB Logo" className={styles.logo} />
+                        ) : (
+                            <img src="assets/MinimalADB_Black_Small.png" alt="MinimalADB Logo" className={styles.logo} />
+                        )}
                         <a href="https://github.com/beecho01/MinimalADB" target="_blank" rel="noopener noreferrer">
-                            <img className={styles.image} src="assets/github-mark-white.png" />
+                            <img 
+                                className={styles.image} 
+                                src={theme === webDarkTheme ? "assets/github-mark-white.png" : "assets/github-mark-black.png"} 
+                            />
                         </a>
                     </div>
                     <Card appearance="subtle" className={styles.stepCard}>

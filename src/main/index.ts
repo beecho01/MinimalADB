@@ -18,6 +18,7 @@ const createBrowserWindow = (): BrowserWindow => {
         backgroundMaterial: "mica",
         vibrancy: "header",
         frame: false,
+        roundedCorners: true,
         height: 870,
         width: 1000,
         resizable: false,
@@ -60,12 +61,12 @@ const registerIpcEventListeners = () => {
             let stderr = "";
 
             adbProcess.stdout.on("data", (data) => {
-                console.log("stdout data:", data);
+                //console.log("stdout data:", data);
                 stdout += data.toString();
             });
 
             adbProcess.stderr.on("data", (data) => {
-                console.log("stderr data:", data);
+                //console.log("stderr data:", data);
                 stderr += data.toString();
             });
 
@@ -90,11 +91,12 @@ const registerIpcEventListeners = () => {
 
     // Handle ADB device listing
     ipcMain.handle("list-devices", async () => {
+        // eslint-disable-next-line no-useless-catch
         try {
             const devices = await client.listDevices();
             return devices.map((device: { id: unknown; type: unknown }) => ({ id: device.id, type: device.type }));
         } catch (error) {
-            console.error("Failed to list devices:", error);
+            //console.error("Failed to list devices:", error);
             throw error;
         }
     });
@@ -106,7 +108,7 @@ const registerIpcEventListeners = () => {
             const outputStr = data.toString();
 
             // Log the raw output
-            console.log("ADB sideload STDOUT chunk:", outputStr);
+            //console.log("ADB sideload STDOUT chunk:", outputStr);
 
             // Look for "XX%" in the output
             const match = outputStr.match(/(\d+)%/);
@@ -121,7 +123,7 @@ const registerIpcEventListeners = () => {
 
         adbProcess.stderr.on("data", (data) => {
             const outputStr = data.toString();
-            console.error("ADB sideload STDERR chunk:", outputStr);
+            //console.error("ADB sideload STDERR chunk:", outputStr);
             event.sender.send("sideload-stderr", outputStr);
         });
 
@@ -139,12 +141,13 @@ const registerIpcEventListeners = () => {
 
     // Handle running shell commands on a device
     ipcMain.handle("run-shell-command", async (event, { deviceId, command }: { deviceId: string; command: string }) => {
+        // eslint-disable-next-line no-useless-catch
         try {
             const device = client.getDevice(deviceId);
             const outputBuffer = await device.shell(command).then(Adb.util.readAll);
             return outputBuffer.toString().trim();
         } catch (error) {
-            console.error(`Error running shell command: ${command} on device ${deviceId}`, error);
+            //console.error(`Error running shell command: ${command} on device ${deviceId}`, error);
             throw error;
         }
     });
@@ -167,8 +170,9 @@ const registerIpcEventListeners = () => {
             const lines = content.split("\n");
             const revisionLine = lines.find((line) => line.startsWith("Pkg.Revision="));
             return revisionLine || "";
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
-            console.error("Error reading source.properties:", error);
+            //console.error("Error reading source.properties:", error);
             return "";
         }
     });

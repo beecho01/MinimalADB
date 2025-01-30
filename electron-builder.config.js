@@ -3,8 +3,8 @@
  * @see https://www.electron.build/configuration/configuration
  */
 const baseConfig = {
-    appId: "com.electron.fluentui",
-    productName: "Electron Fluent UI",
+    appId: "uk.co.beecho01.MinimalADB",
+    productName: "MinimalADB",
     directories: {
         output: "release",
         buildResources: "build",
@@ -19,38 +19,24 @@ const baseConfig = {
  * @type {Record<NodeJS.Platform, import('electron-builder').Configuration>}
  */
 const platformSpecificConfigurations = {
-    darwin: {
-        ...baseConfig,
-        afterPack: "./build/macos/codeSign.mjs",
-        mac: {
-            icon: "build/app-icon-dark.png",
-            target: [{ target: "dmg" }, { target: "zip" }],
-        },
-    },
     win32: {
         ...baseConfig,
-        appx: {
-            applicationId: "OliverSchwendener.ElectronFluentUI",
-            backgroundColor: "#1F1F1F",
-            displayName: "Electron Fluent UI",
-            identityName: "1915OliverSchwendener.ElectronFluentUI",
-            publisher: "CN=AD6BF16D-50E3-4FD4-B769-78A606AFF75E",
-            publisherDisplayName: "Oliver Schwendener",
-            languages: ["en-US"],
-        },
         win: {
-            icon: "build/app-icon-dark.png",
-            target: [{ target: "msi" }, { target: "nsis" }, { target: "zip" }, { target: "appx" }],
-        },
-    },
-    linux: {
-        ...baseConfig,
-        linux: {
-            category: "Utility",
-            icon: "build/app-icon-dark.png",
-            target: [{ target: "AppImage" }, { target: "deb" }, { target: "zip" }],
+            icon: "build/app-icon-dark.png", // Path to your Windows icon
+            target: [
+                { target: "msi" }, // Build MSI installer
+                { target: "zip" }, // Build ZIP archive
+            ],
         },
     },
 };
 
-module.exports = platformSpecificConfigurations[process.platform];
+// Ensure we only export valid configurations for supported platforms
+const config = platformSpecificConfigurations[process.platform];
+if (!config) {
+    throw new Error(
+        `Unsupported platform: ${process.platform}. This application is configured to build only for Windows.`
+    );
+}
+
+module.exports = config;
