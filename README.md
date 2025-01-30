@@ -102,3 +102,5 @@ This project is a **modernised version of [yadev64/GMADB](https://github.com/yad
 
 ## 🏗 Contributions & Suggestions
 Have a feature request or want to contribute? Open an [issue](https://github.com/beecho01/MinimalADB/issues) or submit a pull request!
+
+<br />
