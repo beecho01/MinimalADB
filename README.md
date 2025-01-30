@@ -29,7 +29,8 @@ This project is a **modernised version of [yadev64/GMADB](https://github.com/yad
 ### 🔜 Short-Term Goals
 * Improved Logging & Output – Enhance command execution logs for better debugging.
 * Device Info Panel – Display detailed information about connected devices.
-* Improved Theming - Add support for Windows 10 devices unable to use the `mica` material. 
+* Improved Theming - Add support for Windows 10 devices unable to use the `mica` material.
+* APK File Managment - Add support for APK installation, deletion and extraction.
 
 ### 🚀 Mid-Term Goals
 * File Explorer Integration – Browse device storage directly from the UI.
