@@ -3,7 +3,6 @@
 MinimalADB is a GUI based ADB interface, dedicated for flashing Android devices over ADB (Android Debug Bridge).
 This is a modernised version of [yadev64/GMADB](https://github.com/yadev64/GMADB) using design principals of Microsoft's [Fluent-UI](https://developer.microsoft.com/en-us/fluentui#/).
 
-![Windows Light](docs/windows-light.png)
 ![Windows Dark](docs/windows-dark.png)
 
 ## Development
