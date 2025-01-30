@@ -70,12 +70,6 @@ This project is a **modernised version of [yadev64/GMADB](https://github.com/yad
     yarn run lint
     ```
 
--   Perform typecheck
-
-    ```
-    yarn run typecheck
-    ```
-
 -   Run Prettier
   
     ```
