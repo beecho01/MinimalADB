@@ -566,14 +566,26 @@ export const App = () => {
                 <div className={styles.sidebar}>
                     <div>
                         {theme === webDarkTheme ? (
-                            <img src="assets/MinimalADB_White_Small.png" alt="MinimalADB Logo" className={styles.logo} />
+                            <img
+                                src="assets/MinimalADB_White_Small.png"
+                                alt="MinimalADB Logo"
+                                className={styles.logo}
+                            />
                         ) : (
-                            <img src="assets/MinimalADB_Black_Small.png" alt="MinimalADB Logo" className={styles.logo} />
+                            <img
+                                src="assets/MinimalADB_Black_Small.png"
+                                alt="MinimalADB Logo"
+                                className={styles.logo}
+                            />
                         )}
                         <a href="https://github.com/beecho01/MinimalADB" target="_blank" rel="noopener noreferrer">
-                            <img 
-                                className={styles.image} 
-                                src={theme === webDarkTheme ? "assets/github-mark-white.png" : "assets/github-mark-black.png"} 
+                            <img
+                                className={styles.image}
+                                src={
+                                    theme === webDarkTheme
+                                        ? "assets/github-mark-white.png"
+                                        : "assets/github-mark-black.png"
+                                }
                             />
                         </a>
                     </div>
