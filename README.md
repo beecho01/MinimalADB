@@ -2,47 +2,100 @@
 
 ---
 
-MinimalADB is a GUI based ADB interface, dedicated for flashing Android devices over ADB (Android Debug Bridge).
-This is a modernised version of [yadev64/GMADB](https://github.com/yadev64/GMADB) using design principals of Microsoft's [Fluent-UI](https://developer.microsoft.com/en-us/fluentui#/).
+**MinimalADB** is a modern, user-friendly GUI for interacting with Android devices via **ADB (Android Debug Bridge)**. Designed with Microsoft's [Fluent UI](https://developer.microsoft.com/en-us/fluentui#/) principles, it provides an intuitive interface for **device detection, rebooting into recovery, flashing ROMs, and executing custom ADB commands**.
+
+This project is a **modernised version of [yadev64/GMADB](https://github.com/yadev64/GMADB)**, bringing an updated UI and improved usability for flashing and managing Android devices.
+
+## Features
+
+✅ **Device Management** – Easily check connected ADB devices.  
+✅ **Recovery Mode** – Reboot into recovery mode with one click.  
+✅ **ROM Flashing** – Select and sideload a ROM zip file effortlessly.  
+✅ **Custom Commands** – Execute any ADB command directly from the GUI.  
+✅ **Fluent UI Design** – A sleek and dark-themed interface built for modern Windows environments.  
 
 <br />
 
 ![Windows Dark](docs/windows-dark.png)
 
-## Development
+<br />
+
+---
+
+<br />
+
+## 📅 Roadmap
+### 🔜 Short-Term Goals
+* Improved Logging & Output – Enhance command execution logs for better debugging.
+* Device Info Panel – Display detailed information about connected devices.
+
+### 🚀 Mid-Term Goals
+* File Explorer Integration – Browse device storage directly from the UI.
+* Persistent Settings – Remember last-used configurations and settings.
+* Multi-Device Support – Handle multiple devices connected simultaneously.
+* Fastboot Mode Integration – Extend support for fastboot commands.
+* Theme Customisation – Light mode and custom themes.
+
+### 🌟 Long-Term Goals
+* Wireless ADB Support – Enable easy setup and management of wireless ADB connections.
+* Cross-Platform Support – Explore Linux/macOS support.
+* Scrpy Integration - Capture Videos and Screenshots from device(s).
+
+<br />
+
+---
+
+<br />
+
+## 🛠️ Development
 
 -   Install dependencies
 
     ```
-    $ yarn install
+    yarn install
     ```
 
 -   Run app in dev mode
 
     ```
-    $ yarn run dev
+    yarn run dev
     ```
 
 -   Lint files
 
     ```
-    $ yarn run lint
+    yarn run lint
     ```
 
 -   Perform typecheck
 
     ```
-    $ yarn run typecheck
+    yarn run typecheck
+    ```
+
+-   Run Prettier
+  
+    ```
+    yarn run prettier
     ```
 
 -   Run tests
 
     ```
-    $ yarn run test
+    yarn run test
     ```
 
 -   Build and package app
 
     ```
-    $ yarn run build && yarn run package
+    yarn run build && yarn run package
     ```
+
+<br />
+
+---
+
+<br />
+
+## 🏗 Contributions & Suggestions
+Have a feature request or want to contribute? Open an [issue](https://github.com/beecho01/MinimalADB/issues) or submit a pull request!
