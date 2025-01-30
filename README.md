@@ -15,6 +15,7 @@ This project is a **modernised version of [yadev64/GMADB](https://github.com/yad
 ✅ **Fluent UI Design** – A sleek and dark-themed interface built for modern Windows environments.  
 
 <br />
+<br />
 
 ![Windows Dark](docs/windows-dark.png)
 
