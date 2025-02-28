@@ -1,7 +1,7 @@
 {
     "name": "minimaladb",
     "description": "MinimalADB is a minimalistic Android ADB client for Windows based on Microsoft's Fluent UI.",
-    "version": "1.0.0",
+    "version": "1.0.3",
     "license": "MIT",
     "author": {
         "name": "James Beeching",
@@ -13,7 +13,7 @@
         "dev": "vite",
         "lint": "eslint .",
         "package:publish": "electron-builder --config electron-builder.config.js --publish always",
-        "package": "electron-builder --config electron-builder.config.js",
+        "package": "yarn run build && electron-builder --config electron-builder.config.js",
         "prettier:check": "prettier --check -- src/**/*.{ts,tsx}",
         "prettier": "prettier --write -- src/**/*.{ts,tsx}",
         "test:coverage": "vitest run --coverage",

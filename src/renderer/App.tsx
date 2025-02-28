@@ -185,6 +185,7 @@ const useStyles = makeStyles({
 
 export const App = () => {
     const [theme, setTheme] = useState<Theme>(getTheme());
+    const [micaSupported, setMicaSupported] = useState(false);
     const styles = useStyles();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [dialogTitle, setDialogTitle] = useState<string>("");
@@ -195,6 +196,16 @@ export const App = () => {
     const [customCommandInput, setCustomCommandInput] = useState("");
     const [adbVersion, setAdbVersion] = useState<string>("");
     const [appVersion, setAppVersion] = useState<string>("");
+
+    useEffect(() => {
+        window.electron.ipcRenderer
+            .invoke("is-mica-supported")
+            .then((res: boolean) => setMicaSupported(res))
+            .catch((error) => {
+                console.error("Error checking Mica support:", error);
+                setMicaSupported(false);
+            });
+    }, []);
 
     const getAdbVersion = async () => {
         try {
@@ -561,8 +572,19 @@ export const App = () => {
     }, [terminal]);
 
     return (
-        <FluentProvider theme={theme} className={styles.fluentProvider}>
-            <div className={styles.main}>
+        <FluentProvider
+            theme={theme}
+            className={styles.fluentProvider}
+            style={{
+                background: micaSupported ? "transparent" : tokens.colorNeutralBackground2,
+            }}
+        >
+            <div
+                className={styles.main}
+                style={{
+                    background: micaSupported ? "transparent" : tokens.colorNeutralBackground2,
+                }}
+            >
                 <div className={styles.sidebar}>
                     <div>
                         {theme === webDarkTheme ? (
@@ -655,7 +677,12 @@ export const App = () => {
                         />
                     </Card>
                 </div>
-                <div className={styles.workspace}>
+                <div
+                    className={styles.workspace}
+                    style={{
+                        background: micaSupported ? "transparent" : tokens.colorNeutralBackground2,
+                    }}
+                >
                     <Toolbar className={styles.toolbar}>
                         <Menu>
                             <MenuTrigger>

@@ -31,6 +31,7 @@ contextBridge.exposeInMainWorld("electron", {
                 "get-source-properties",
                 "get-app-version",
                 "show-save-dialog",
+                "is-mica-supported",
                 "save-file",
             ];
             if (validChannels.includes(channel)) {

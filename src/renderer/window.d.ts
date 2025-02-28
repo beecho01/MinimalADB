@@ -14,6 +14,7 @@ export declare global {
                 ): Promise<{ stdout: string; stderr: string }>;
                 invoke(channel: "get-source-properties"): Promise<string>;
                 invoke(channel: "get-app-version"): Promise<string>;
+                invoke(channel: "is-mica-supported"): Promise<boolean>;
                 send: (channel: string, ...args: unknown[]) => void;
                 on: (channel: string, listener: (event: unknown, ...args: unknown[]) => void) => void;
                 removeAllListeners: (channel: string) => void;
