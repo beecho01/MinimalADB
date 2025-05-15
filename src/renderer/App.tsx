@@ -14,7 +14,7 @@ import "jetbrains-mono/css/jetbrains-mono.css";
 import React, { useEffect, useRef, useState } from "react";
 import { InfoDialog } from "./components/InfoDialog";
 import { Sidebar } from "./components/Sidebar/Sidebar";
-import { ToolbarComponent } from "./components/Toolbar";
+import { ToolbarComponent } from "./components/Toolbar/Toolbar";
 import { showLicenseDialog } from "./handlers/dialogHandlers";
 import { handleFileSelect, handleSaveTerminalContents, handleSideloadClick } from "./handlers/fileHandlers";
 import {

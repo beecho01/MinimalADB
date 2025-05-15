@@ -10,6 +10,7 @@ import {
   Toolbar,
   ToolbarButton,
   ToolbarDivider,
+  Tooltip,
 } from "@fluentui/react-components";
 import { ArrowResetRegular, MoreHorizontalFilled, SaveRegular } from "@fluentui/react-icons";
 import { Terminal } from "@xterm/xterm";
@@ -67,15 +68,19 @@ export const ToolbarComponent: React.FC<ToolbarComponentProps> = ({
         </MenuPopover>
       </Menu>
       <ToolbarDivider />
-      <ToolbarButton aria-label="Save Terminal Contents" icon={<SaveRegular />} onClick={onSaveTerminalContents} />
-      <ToolbarButton
-        aria-label="Reset Terminal Contents"
-        icon={<ArrowResetRegular />}
-        onClick={() => {
-          terminal?.reset();
-          terminal?.write("> ");
-        }}
-      />
+      <Tooltip content="Save Terminal Contents" relationship="label" withArrow positioning={"below"}>
+        <ToolbarButton aria-label="Save Terminal Contents" icon={<SaveRegular />} onClick={onSaveTerminalContents} />
+      </Tooltip>
+      <Tooltip content="Clear Terminal Contents" relationship="label" withArrow positioning={"below"}>
+        <ToolbarButton
+          aria-label="Reset Terminal Contents"
+          icon={<ArrowResetRegular />}
+          onClick={() => {
+            terminal?.reset();
+            terminal?.write("> ");
+          }}
+        />
+      </Tooltip>
     </Toolbar>
   );
 };
